@@ -1,0 +1,32 @@
+--- enrollment numbers
+select case
+    when LEVEL in ('PR', 'GR') then 'GR'
+        when LEVEL = 'UG' then 'UG' END As LevelRC,
+       FT_PT_DESC, FT_PT, count(id)
+    from ENR
+where Year = '2024' and Season = 'fall'
+  and report = 1
+and FT_PT in ('FT', 'PT')
+group by case
+    when LEVEL in ('PR', 'GR') then 'GR'
+        when LEVEL = 'UG' then 'UG' END, FT_PT, FT_PT_DESC
+order by case
+    when LEVEL in ('PR', 'GR') then 'GR'
+        when LEVEL = 'UG' then 'UG' END DESC;
+
+--- faculty numbers
+select FCTG_CODE, count(id)
+    from FAC
+where Year = '2024' and Season = 'fall'
+  and report = 1
+group by FCTG_CODE;
+
+--- % tenured
+select count(id) as TOTAL,
+       count(case when FCTG_CODE = 'FTFAC' then 1 END) AS FT,
+       count(case when TENR_CODE = 'T' then 1 END) as TENR,
+       (cast(count(case when TENR_CODE = 'T' then 1 END) as decimal))*100/cast(count(case when FCTG_CODE = 'FTFAC' then 1 END)as decimal) AS PERC_TENR
+    from FAC
+where Year = '2024' and Season = 'fall'
+  and report = 1
+and FCTG_CODE in ('FTFAC', 'PTFAC')
