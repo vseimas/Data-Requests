@@ -1,0 +1,57 @@
+WITH ENROLLED AS (
+select count(id) as headcount, term_code_key, season, year, level, styp_code, styp_desc, discipline, curr_majr, MAJR_CODE1, MAJR_DESC1, degc_code, curr_majr+' ('+ degc_code + ')' as majr_degc,
+       majr_desc1_capp as concentration, majr_desc1_capp+' ('+ degc_code + ')' as concentration_degc,
+
+	CASE
+	WHEN styp_code = 'N' and level = 'UG' THEN 'First Time, First Year'
+	ELSE styp_desc
+	END as styp,
+
+	CASE
+	WHEN discipline = 'COP - Humanities' OR discipline = 'COP - Natural Sciences' OR discipline = 'COP - Social Sciences' OR discipline = 'COP - Exploratory'
+	THEN 'College of the Pacific'
+	WHEN discipline = 'ESB' THEN 'Eberhardt School of Business'
+	WHEN discipline = 'BC' THEN 'Benerd College'
+	WHEN discipline = 'SOECS' THEN 'School of Engineering and Computer Science'
+	WHEN discipline = 'COM' THEN 'Conservatory of Music'
+	WHEN discipline = 'SHS' THEN 'School of Health Sciences'
+	WHEN discipline = 'SOP' THEN 'Thomas J Long School of Pharmacy'
+	WHEN discipline = 'DEN' THEN 'Arthur A Dugoni School of Dentistry'
+	WHEN discipline = 'LAW' THEN 'McGeorge School of Law'
+	WHEN discipline = 'UW' THEN 'University Wide'
+	WHEN discipline = 'UNC' THEN 'Unclassified'
+	END as college
+
+
+from enr WITH (NOLOCK)
+where report = '1'
+  and Season = 'Fall'
+and year >= '2020'
+group by term_code_key, season, year, level, styp_code, styp_desc, discipline, curr_majr, degc_code, majr_desc1_capp, MAJR_CODE1, MAJR_DESC1
+)
+
+select curr_majr,
+ ---      case when MAJR_DESC1 = CURR_MAJR then null else 'MISMATCH' END as Majr_Check,
+ ---          curr_majr,
+sum(case when year = '2020' then headcount END) as HC_2020,
+sum(case when year = '2021' then headcount END) as HC_2021,
+sum(case when year = '2022' then headcount END) as HC_2022,
+sum(case when year = '2023' then headcount END) as HC_2023,
+sum(case when year = '2024' then headcount END) as HC_2024,
+(
+sum(case when year = '2022' then headcount END)+
+sum(case when year = '2023' then headcount END)+
+sum(case when year = '2024' then headcount END) ) / 3.0 AS HC_3YR_AVG,
+
+round(cast((
+sum(case when year = '2022' then headcount END)+
+sum(case when year = '2023' then headcount END)+
+sum(case when year = '2024' then headcount END) ) / 3.0 as decimal), 0) AS HC_3YR_AVG1
+
+from ENROLLED WITH (NOLOCK)
+where level = 'UG'
+and CURR_MAJR in ('Biochemistry', 'Chemistry')
+--- and STyp in ('First Time, First Year', 'Transfer')
+group by CURR_MAJR
+
+---order by HC_3YR_AVG1 desc
