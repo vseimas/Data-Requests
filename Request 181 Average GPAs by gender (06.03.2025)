@@ -1,0 +1,33 @@
+select	count(distinct e.id) distinct_student_count,
+		e.season+' '+e.year,
+		case
+		    when e.GENDER = 'F' then 'Woman'
+		    when e.GENDER = 'M' then 'Man'
+		    when e.GENDER = 'N' then 'No Reported Gender'
+		    when e.GENDER is null then 'No Reported Gender'
+		    END as GEN,
+		round(AVG(g.INST_LGPA_GPA), 2) avg_cumulative_Pacific_GPA,
+		round(AVG(g.INST_TGPA_GPA), 2) avg_term_Pacific_GPA
+from GRADES g left join ENR e on e.id = g.id and e.TERM_CODE_KEY = g.TERM_CODE_KEY
+where e.report = 1
+  and e.LEVEL = 'ug'
+  and e.season+' '+e.year in ('Spring 2024', 'Fall 2024')
+group by e.season+' '+e.year, case
+		    when e.GENDER = 'F' then 'Woman'
+		    when e.GENDER = 'M' then 'Man'
+		    when e.GENDER = 'N' then 'No Reported Gender'
+		    when e.GENDER is null then 'No Reported Gender'
+		    END
+
+UNION ALL
+select count(distinct e.id) distinct_student_count,
+		e.season+' '+e.year, 'Overall' as ' ',
+		round(AVG(g.INST_LGPA_GPA), 2) avg_cumulative_Pacific_GPA,
+		round(AVG(g.INST_TGPA_GPA), 2) avg_term_Pacific_GPA
+from GRADES g left join ENR e on e.id = g.id and e.TERM_CODE_KEY = g.TERM_CODE_KEY
+where e.report = 1
+  and e.LEVEL = 'ug'
+  and e.season+' '+e.year in ('Spring 2024', 'Fall 2024')
+group by e.season+' '+e.year
+
+order by e.season+' '+e.year, distinct_student_count desc
